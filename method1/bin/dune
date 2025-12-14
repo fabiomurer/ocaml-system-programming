@@ -1,0 +1,7 @@
+(executable
+ (public_name method1)
+ (name myprog)
+ (libraries ctypes.foreign)
+ (foreign_stubs
+  (language c)
+  (names mylib_stubs)))
