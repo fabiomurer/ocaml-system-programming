@@ -1,0 +1,45 @@
+; 1. Tell Dune to treat libfoo as a raw directory (ignore any dune files inside)
+(data_only_dirs libfoo)
+
+; 2. Define the rule to build the external project
+(rule
+ (deps (source_tree libfoo))
+ ; We need the static lib, the DLL (for bytecode), and the header
+ (targets libfoo.a dllfoo.so foo.h)
+ (action
+  (no-infer
+   (progn
+    (chdir libfoo (run make))
+    ; Copy artifacts to the project root
+    (copy libfoo/libfoo.a libfoo.a)
+    (copy libfoo/libfoo.so dllfoo.so)
+    (copy libfoo/foo.h foo.h)))))
+
+; 3. Define the executable with Ctypes generation
+(executable
+ (name foo)
+ (libraries ctypes)
+ 
+ ; Ensure the C library is built before we try to link the executable
+ (link_deps libfoo.a dllfoo.so)
+
+ (ctypes
+  (external_library_name foo)
+  (build_flags_resolver
+   (vendored
+    ; Look for foo.h in the current directory (copied by the rule above)
+    (c_flags (:standard -I.))
+    ; Link against libfoo.a in the current directory
+    (c_library_flags (:standard -L. -lfoo))))
+  
+  (headers (include "foo.h"))
+  
+  (type_description
+   (instance Types)
+   (functor Type_description))
+  (function_description
+   (concurrency unlocked)
+   (instance Functions)
+   (functor Function_description))
+  (generated_types Types_generated)
+  (generated_entry_point C)))
