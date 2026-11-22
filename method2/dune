@@ -31,9 +31,10 @@
     (c_flags (:standard -I.))
     ; Link against libfoo.a in the current directory
     (c_library_flags (:standard -L. -lfoo))))
-  
+
   (headers (include "foo.h"))
-  
+  (deps foo.h)
+
   (type_description
    (instance Types)
    (functor Type_description))
